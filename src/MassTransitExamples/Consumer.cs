@@ -8,19 +8,15 @@ namespace MassTransitExamples
     {
         public Task Consume(ConsumeContext<IMessage> context)
         {
-            Console.WriteLine($"Message with ID {context.Message.Id} consumed.");
+            var message = context.Message;
+            Console.WriteLine($"Message with ID \"{message.Id}\" and Name \"{message.Name}\" consumed.");
+
+            if (message.Name.Length <= 5)
+            {
+                throw new NameTooShortException($"Message name is {message.Name.Length} long, but it is expected to be at least 6 characters long.");
+            }
 
             throw new Exception("Unable to connect to external service.");
         }
-    }
-
-    public interface IMessage
-    {
-        string Id { get; }
-    }
-
-    public class Message
-    {
-        public string Id { get; set; }
     }
 }

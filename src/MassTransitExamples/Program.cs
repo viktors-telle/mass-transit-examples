@@ -12,24 +12,36 @@ namespace MassTransitExamples
             var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
             {
                 cfg.Host("localhost");
+                // Enable redelivery.
                 cfg.UseDelayedExchangeMessageScheduler();
 
                 cfg.ReceiveEndpoint("message-queue", e =>
                 {
+                    // Configure redelivery retries.
                     e.UseScheduledRedelivery(retryConfigurator =>
-                        retryConfigurator.Intervals(
-                            TimeSpan.FromMinutes(1),
-                            TimeSpan.FromMinutes(2),
-                            TimeSpan.FromMinutes(3)
-                        )
+                        {
+                            // Do not retry "NameTooShortException" exception.
+                            retryConfigurator.Ignore(typeof(NameTooShortException));
+
+                            retryConfigurator.Intervals(
+                                TimeSpan.FromMinutes(1),
+                                TimeSpan.FromMinutes(2),
+                                TimeSpan.FromMinutes(3)
+                            );
+                        }
                     );
 
                     e.UseMessageRetry(retryConfigurator =>
-                        retryConfigurator.Incremental(
-                            3,
-                            TimeSpan.FromSeconds(1),
-                            TimeSpan.FromSeconds(15)
-                        )
+                        {
+                            // Do not retry "NameTooShortException" exception.
+                            retryConfigurator.Ignore(typeof(NameTooShortException));
+
+                            retryConfigurator.Incremental(
+                                3,
+                                TimeSpan.FromSeconds(1),
+                                TimeSpan.FromSeconds(15)
+                            );
+                        }
                     );
 
                     e.Consumer<Consumer>();
@@ -37,16 +49,22 @@ namespace MassTransitExamples
             });
 
             await busControl.StartAsync();
+            var messagePublished = false;
             try
             {
                 do
                 {
-                    await busControl.Publish<IMessage>(new Message
-                    {
-                        Id = Guid.NewGuid().ToString()
-                    });
+                    if (messagePublished) { continue; }
+    
+                    await busControl.Publish<IMessage>(
+                        new Message(Guid.NewGuid().ToString(), "Valid name")           
+                    );
 
-                    await Task.Delay((int) TimeSpan.FromMinutes(5).TotalMilliseconds);
+                    await busControl.Publish<IMessage>(
+                        new Message(Guid.NewGuid().ToString(), "Short")           
+                    );
+
+                    messagePublished = true;
 
                 } while (true);
             }
