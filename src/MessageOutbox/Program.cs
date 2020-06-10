@@ -52,6 +52,29 @@ namespace MessageOutbox
         private static async Task StartBusControl(IBusControl busControl)
         {
             await busControl.StartAsync();
+            var messagePublished = false;
+            try
+            {
+                do
+                {
+                    if (messagePublished) { continue; }
+
+                    await busControl.Publish<IMessage>(
+                        new Message(Guid.NewGuid().ToString())
+                    );
+
+                    messagePublished = true;
+
+                } while (true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error while publishing the message: {e}");
+            }
+            finally
+            {
+                await busControl.StopAsync();
+            }
         }
     }
 }

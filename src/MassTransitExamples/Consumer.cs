@@ -4,7 +4,7 @@ using MassTransit;
 
 namespace Retries
 {
-    public class Consumer : IConsumer<IMessage>
+    internal class Consumer : IConsumer<IMessage>
     {
         public Task Consume(ConsumeContext<IMessage> context)
         {

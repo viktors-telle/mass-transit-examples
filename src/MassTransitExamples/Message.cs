@@ -1,6 +1,6 @@
 namespace Retries
 {
-    public class Message
+    internal class Message : IMessage
     {
         public Message(string id, string name)
         {
