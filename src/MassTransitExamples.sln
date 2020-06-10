@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29911.84
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MassTransitExamples", "MassTransitExamples\MassTransitExamples.csproj", "{0B9EA851-D19F-4C6A-9819-D9974E18C126}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Retries", "MassTransitExamples\Retries.csproj", "{0B9EA851-D19F-4C6A-9819-D9974E18C126}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageOutbox", "MessageOutbox\MessageOutbox.csproj", "{A04F81EA-6A63-4106-9A93-7121E8B50564}"
 EndProject

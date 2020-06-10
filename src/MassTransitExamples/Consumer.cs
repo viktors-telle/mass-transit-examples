@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using MassTransit;
 
-namespace MassTransitExamples
+namespace Retries
 {
     public class Consumer : IConsumer<IMessage>
     {

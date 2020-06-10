@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace MassTransitExamples
+namespace Retries
 {
     [Serializable]
     public class ExternalServiceUnavailableException : Exception

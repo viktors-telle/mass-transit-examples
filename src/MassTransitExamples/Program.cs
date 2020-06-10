@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using GreenPipes;
 using MassTransit;
 
-namespace MassTransitExamples
+namespace Retries
 {
     internal static class Program
     {
@@ -70,7 +70,7 @@ namespace MassTransitExamples
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error while publishing the message: {e.ToString()}");
+                Console.WriteLine($"Error while publishing the message: {e}");
             }
             finally
             {

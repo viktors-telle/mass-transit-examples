@@ -1,4 +1,4 @@
-namespace MassTransitExamples
+namespace Retries
 {
     public interface IMessage
     {
