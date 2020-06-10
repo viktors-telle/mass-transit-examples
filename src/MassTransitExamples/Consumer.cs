@@ -16,7 +16,7 @@ namespace MassTransitExamples
                 throw new NameTooShortException($"Message name is {message.Name.Length} long, but it is expected to be at least 6 characters long.");
             }
 
-            throw new Exception("Unable to connect to external service.");
+            throw new ExternalServiceUnavailableException("Unable to connect to external service.");
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Runtime.Serialization;
 
 namespace MassTransitExamples
 {
+    [Serializable]
     public class NameTooShortException : Exception
     {
         public NameTooShortException()
