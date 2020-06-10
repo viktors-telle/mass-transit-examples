@@ -5,4 +5,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="6.3.2" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="6.3.2" />
+  </ItemGroup>
+
 </Project>

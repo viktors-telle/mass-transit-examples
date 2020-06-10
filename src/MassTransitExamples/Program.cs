@@ -9,7 +9,13 @@ namespace Retries
     {
         static async Task Main(string[] args)
         {
-            var busControl = Bus.Factory.CreateUsingRabbitMq(cfg =>
+            var busControl = CreateBusControl();
+            await StartBusControl(busControl);
+        }
+
+        private static IBusControl CreateBusControl()
+        {
+            return Bus.Factory.CreateUsingRabbitMq(cfg =>
             {
                 cfg.Host("localhost");
                 // Enable redelivery.
@@ -47,7 +53,10 @@ namespace Retries
                     e.Consumer<Consumer>();
                 });
             });
+        }
 
+        private static async Task StartBusControl(IBusControl busControl)
+        {
             await busControl.StartAsync();
             var messagePublished = false;
             try
@@ -55,13 +64,13 @@ namespace Retries
                 do
                 {
                     if (messagePublished) { continue; }
-    
+
                     await busControl.Publish<IMessage>(
-                        new Message(Guid.NewGuid().ToString(), "Valid name")           
+                        new Message(Guid.NewGuid().ToString(), "Valid name")
                     );
 
                     await busControl.Publish<IMessage>(
-                        new Message(Guid.NewGuid().ToString(), "Short")           
+                        new Message(Guid.NewGuid().ToString(), "Short")
                     );
 
                     messagePublished = true;
