@@ -58,33 +58,19 @@ namespace Retries
         private static async Task StartBusControl(IBusControl busControl)
         {
             await busControl.StartAsync();
-            var messagePublished = false;
-            try
-            {
-                do
-                {
-                    if (messagePublished) { continue; }
 
-                    await busControl.Publish<IMessage>(
-                        new Message(Guid.NewGuid().ToString(), "Valid name")
-                    );
+            await busControl.Publish<IMessage>(
+                new Message(Guid.NewGuid().ToString(), "Valid name")
+            );
 
-                    await busControl.Publish<IMessage>(
-                        new Message(Guid.NewGuid().ToString(), "Short")
-                    );
+            await busControl.Publish<IMessage>(
+                new Message(Guid.NewGuid().ToString(), "Short")
+            );
 
-                    messagePublished = true;
+            Console.WriteLine("Press any key to exit");
+            await Task.Run(() => Console.ReadKey());
 
-                } while (true);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error while publishing the message: {e}");
-            }
-            finally
-            {
-                await busControl.StopAsync();
-            }
+            await busControl.StopAsync();
         }
     }
 }

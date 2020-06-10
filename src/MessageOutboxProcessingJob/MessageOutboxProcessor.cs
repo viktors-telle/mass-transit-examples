@@ -16,6 +16,17 @@ namespace MessageOutboxProcessingJob
         public Task ProcessFailedMessage(IMessage message)
         {
             logger.LogInformation($"Message with ID \"{message.Id}\" processed");
+
+            // TODO: Create DB transaction.
+
+            // TODO: Fetch failed messages from DB.
+
+            // TODO: Resend them to the queue.
+
+            // TODO: Change message the status.
+
+            // TODO: Commit transaction.
+
             return Task.CompletedTask;
         }
     }

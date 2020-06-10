@@ -8,7 +8,8 @@ namespace MessageOutbox
     {
         public Task Consume(ConsumeContext<IMessage> context)
         {
-            throw new NotImplementedException();
+            Console.WriteLine($"Message with ID \"{context.Message.Id}\" consumed.");
+            return Task.CompletedTask;
         }
     }
 }

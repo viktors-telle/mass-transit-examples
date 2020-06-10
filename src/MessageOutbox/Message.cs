@@ -1,5 +1,10 @@
 namespace MessageOutbox
 {
+    public interface IMessage
+    {
+        string Id { get; }
+    }
+
     public class Message : IMessage
     {
         public Message(string id)
