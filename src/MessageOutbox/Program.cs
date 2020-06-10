@@ -7,7 +7,7 @@ namespace MessageOutbox
 {
     internal static class Program
     {
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var busControl = CreateBusControl();
             await StartBusControl(busControl);
@@ -52,20 +52,9 @@ namespace MessageOutbox
         private static async Task StartBusControl(IBusControl busControl)
         {
             await busControl.StartAsync();
-            var messagePublished = false;
             try
             {
-                do
-                {
-                    if (messagePublished) { continue; }
-
-                    await busControl.Publish<IMessage>(
-                        new Message(Guid.NewGuid().ToString())
-                    );
-
-                    messagePublished = true;
-
-                } while (true);
+                await busControl.Publish<IMessage>(new Message(Guid.NewGuid().ToString()));
             }
             catch (Exception e)
             {

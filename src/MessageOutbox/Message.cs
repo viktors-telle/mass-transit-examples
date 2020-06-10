@@ -1,6 +1,6 @@
 namespace MessageOutbox
 {
-    internal class Message
+    public class Message : IMessage
     {
         public Message(string id)
         {
