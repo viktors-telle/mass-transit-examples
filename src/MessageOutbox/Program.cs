@@ -2,6 +2,10 @@
 using System;
 using GreenPipes;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace MessageOutbox
 {
@@ -9,21 +13,49 @@ namespace MessageOutbox
     {
         public static async Task Main(string[] args)
         {
-            var busControl = CreateBusControl();
-            await StartBusControl(busControl);
+            var builder = new HostBuilder()
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    config.AddJsonFile("appSettings.json", optional: true);
+                    config.AddEnvironmentVariables();
+
+                    if (args != null) config.AddCommandLine(args);
+                })
+                .ConfigureServices((hostContext, services) =>
+                {
+                    services.Configure<MessageOutboxSettings>(hostContext.Configuration.GetSection("MessageOutboxSettings"));
+
+                    services.AddMassTransit(cfg =>
+                    {
+                        cfg.AddBus(CreateBusControl);
+                        cfg.AddConsumer<Consumer>();
+                    });
+
+                    services.AddScoped<IMessageOutboxRepository, MessageOutboxRepository>();
+                    services.AddSingleton<MessageOutboxSettings>();
+                    services.AddHostedService<MassTransitHostedService>();
+                    services.AddHostedService<MessagePublisher>();
+                })
+                .ConfigureLogging((hostingContext, logging) =>
+                {
+                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                    logging.AddConsole();
+                });
+
+            await builder.RunConsoleAsync();
         }
 
-        private static IBusControl CreateBusControl()
+        private static IBusControl CreateBusControl(IRegistrationContext<IServiceProvider> serviceProvider)
         {
             return Bus.Factory.CreateUsingRabbitMq(cfg =>
             {
                 cfg.Host("localhost");
-                // Enable redelivery.
                 cfg.UseDelayedExchangeMessageScheduler();
 
                 cfg.ReceiveEndpoint("message-queue", e =>
                 {
-                    // Configure redelivery retries.
+                    e.Consumer<Consumer>(serviceProvider.Container);
+
                     e.UseScheduledRedelivery(retryConfigurator =>
                         {
                             retryConfigurator.Intervals(
@@ -43,22 +75,8 @@ namespace MessageOutbox
                             );
                         }
                     );
-
-                    e.Consumer<Consumer>();
-                });
+                });                
             });
-        }
-
-        private static async Task StartBusControl(IBusControl busControl)
-        {
-            await busControl.StartAsync();
-
-            await busControl.Publish<IMessage>(new Message(Guid.NewGuid().ToString()));
-
-            Console.WriteLine("Press any key to exit");
-            await Task.Run(() => Console.ReadKey());
-
-            await busControl.StopAsync();
         }
     }
 }

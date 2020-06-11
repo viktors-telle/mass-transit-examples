@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MessageOutbox;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,12 +25,12 @@ namespace MessageOutboxProcessingJob
             while (!stoppingToken.IsCancellationRequested)
             {
                 logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await messageOutboxProcessor.ProcessFailedMessage(new Message(Guid.NewGuid().ToString()));
+                await messageOutboxProcessor.ProcessFailedMessages();
                 await Task.Delay((int)TimeSpan.FromSeconds(5).TotalMilliseconds, stoppingToken);
             }
         }
 
-        public override async Task StopAsync(CancellationToken stoppingToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
             logger.LogInformation("Consume Scoped Service Hosted Service is stopping.");
 

@@ -4,12 +4,11 @@ using System.Threading.Tasks;
 
 namespace MessageOutbox
 {
-    internal class Consumer : IConsumer<IMessage>
+    public class Consumer : IConsumer<IMessage>
     {
-        public Task Consume(ConsumeContext<IMessage> context)
+        public async Task Consume(ConsumeContext<IMessage> context)
         {
-            Console.WriteLine($"Message with ID \"{context.Message.Id}\" consumed.");
-            return Task.CompletedTask;
+            await Console.Out.WriteLineAsync($"Message with ID \"{context.Message.Id}\" consumed.");
         }
     }
 }

@@ -1,10 +1,9 @@
-﻿using MessageOutbox;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace MessageOutboxProcessingJob
 {
     internal interface IMessageOutboxProcessor
     {
-        Task ProcessFailedMessage(IMessage message);
+        Task ProcessFailedMessages();
     }
 }
