@@ -1,11 +1,16 @@
 ﻿using MassTransit;
-using MessageOutbox;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MessageOutboxProcessingJob
+namespace MessageOutbox.Outbox
 {
+    internal interface IMessageOutboxProcessor
+    {
+        Task ProcessFailedMessages();
+    }
+
     internal class MessageOutboxProcessor : IMessageOutboxProcessor
     {
         private readonly IMessageOutboxRepository messageOutboxRepository;
@@ -28,7 +33,7 @@ namespace MessageOutboxProcessingJob
             await messageOutboxRepository.ExecuteTransaction(async () =>
             {
                 var unprocessedMessages = await messageOutboxRepository.GetUnprocessed();
-               
+
                 var unprocessedMessageTasks = unprocessedMessages
                     .Select(unprocessedMessage => ProcessFailedMessage(unprocessedMessage));
 
@@ -40,8 +45,18 @@ namespace MessageOutboxProcessingJob
         {
             logger.LogInformation($"Processing message with ID {message.Id}.");
 
-            await bus.Publish(message);
-            await messageOutboxRepository.Update(message);
+            try
+            {
+                await bus.Publish(message);
+                await messageOutboxRepository.Update(message, true);
+            }
+            catch (Exception ex)
+            {
+                await messageOutboxRepository.Update(message, false);
+                logger.LogWarning($"Message processing with ID {message.Id} failed. " +
+                    $"{Environment.NewLine} Exception: {ex}");
+            }
+
 
             logger.LogInformation($"Finished processing message with ID {message.Id}.");
         }

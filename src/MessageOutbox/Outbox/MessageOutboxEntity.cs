@@ -2,7 +2,7 @@
 using MongoDB.Bson.Serialization.Attributes;
 using System;
 
-namespace MessageOutbox
+namespace MessageOutbox.Outbox
 {
     public class MessageOutboxEntity
     {

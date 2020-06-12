@@ -7,13 +7,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MessageOutbox
+namespace MessageOutbox.Outbox
 {
     public interface IMessageOutboxRepository
     {
         Task Save(IMessage message);
 
-        Task Update(IMessage message);
+        Task Update(IMessage message, bool isProcessed);
 
         Task<IList<IMessage>> GetUnprocessed();
 
@@ -29,9 +29,10 @@ namespace MessageOutbox
         {
             var settings = messageOutboxSettings.CurrentValue;
             client = new MongoClient(settings.ConnectionString);
+
             var database = client.GetDatabase(settings.DatabaseName);
 
-            messages = database.GetCollection<MessageOutboxEntity>(settings.CollectionName);
+            messages = CreateCollectionIfNotExists(database, settings.CollectionName);
         }
 
         public async Task<IList<IMessage>> GetUnprocessed()
@@ -43,10 +44,10 @@ namespace MessageOutbox
                 .ToList();
         }
 
-        public async Task Update(IMessage message)
+        public async Task Update(IMessage message, bool isProcessed)
         {
             var messageEntity = Get(message.Id);
-            messageEntity.IsProcessed = true;
+            messageEntity.IsProcessed = isProcessed;
             messageEntity.Modified = DateTimeOffset.UtcNow;
             await messages.ReplaceOneAsync(messageEntity => messageEntity.MessageId == message.Id, messageEntity);
         }
@@ -81,7 +82,21 @@ namespace MessageOutbox
             }
         }
 
-        private MessageOutboxEntity Get(string id) =>
-            messages.Find(message => message.MessageId == id).FirstOrDefault();
+        private MessageOutboxEntity Get(string id) => messages
+            .Find(message => message.MessageId == id)
+            .FirstOrDefault();
+
+        private IMongoCollection<MessageOutboxEntity> CreateCollectionIfNotExists(IMongoDatabase database, string collectionName)
+        {
+            var filter = new BsonDocument("name", collectionName);
+            var options = new ListCollectionNamesOptions { Filter = filter };
+
+            if (!database.ListCollectionNames(options).Any())
+            {
+                database.CreateCollection(collectionName);
+            }
+
+            return database.GetCollection<MessageOutboxEntity>(collectionName);
+        }
     }
 }

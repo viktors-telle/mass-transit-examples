@@ -1,4 +1,4 @@
-﻿namespace MessageOutbox
+﻿namespace MessageOutbox.Outbox
 {
     public class MessageOutboxSettings
     {

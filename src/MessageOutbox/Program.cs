@@ -1,60 +1,54 @@
-﻿using MassTransit;
-using System;
 using GreenPipes;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
+using System;
+using MessageOutbox.Consumer;
+using MessageOutbox.Outbox;
+using MessageOutbox.OutboxProcessor;
+using MessageOutbox.Publisher;
 
 namespace MessageOutbox
 {
-    internal static class Program
+    public static class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            var builder = new HostBuilder()
-                .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    config.AddJsonFile("appSettings.json", optional: true);
-                    config.AddEnvironmentVariables();
+            CreateHostBuilder(args).Build().Run();
+        }
 
-                    if (args != null) config.AddCommandLine(args);
-                })
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.Configure<MessageOutboxSettings>(hostContext.Configuration.GetSection("MessageOutboxSettings"));
+                    services.AddScoped<IMessageOutboxProcessor, MessageOutboxProcessor>();
+                    
+                    services.AddSingleton<IMessageOutboxRepository, MessageOutboxRepository>();
+                    services.AddSingleton<MessageOutboxSettings>();
+
+                    services.AddHostedService<MessageOutboxProcessorBackgroundService>();
+                    services.AddHostedService<MessagePublisherService>();
+                    services.AddHostedService<ConsumerHostedService>();
 
                     services.AddMassTransit(cfg =>
                     {
+                        cfg.AddConsumer<MessageConsumer>();
                         cfg.AddBus(CreateBusControl);
-                        cfg.AddConsumer<Consumer>();
                     });
-
-                    services.AddScoped<IMessageOutboxRepository, MessageOutboxRepository>();
-                    services.AddSingleton<MessageOutboxSettings>();
-                    services.AddHostedService<MassTransitHostedService>();
-                    services.AddHostedService<MessagePublisher>();
-                })
-                .ConfigureLogging((hostingContext, logging) =>
-                {
-                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
                 });
-
-            await builder.RunConsoleAsync();
-        }
 
         private static IBusControl CreateBusControl(IRegistrationContext<IServiceProvider> serviceProvider)
         {
             return Bus.Factory.CreateUsingRabbitMq(cfg =>
             {
-                cfg.Host("localhost");
+                cfg.Host("localhost");                
                 cfg.UseDelayedExchangeMessageScheduler();
 
                 cfg.ReceiveEndpoint("message-queue", e =>
                 {
-                    e.Consumer<Consumer>(serviceProvider.Container);
+                    e.PrefetchCount = 16;
+                    e.Consumer<MessageConsumer>(serviceProvider.Container);
 
                     e.UseScheduledRedelivery(retryConfigurator =>
                         {
@@ -75,7 +69,7 @@ namespace MessageOutbox
                             );
                         }
                     );
-                });                
+                });
             });
         }
     }
