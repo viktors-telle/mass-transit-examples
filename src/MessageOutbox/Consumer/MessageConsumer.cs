@@ -13,6 +13,7 @@ namespace MessageOutbox.Consumer
         {
             this.logger = logger;
         }
+
         public Task Consume(ConsumeContext<IMessage> context)
         {
             logger.LogInformation($"Message with ID \"{context.Message.Id}\" consumed.");
