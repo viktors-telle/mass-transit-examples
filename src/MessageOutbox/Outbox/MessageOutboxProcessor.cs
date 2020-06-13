@@ -57,7 +57,6 @@ namespace MessageOutbox.Outbox
                     $"{Environment.NewLine} Exception: {ex}");
             }
 
-
             logger.LogInformation($"Finished processing message with ID {message.Id}.");
         }
     }
