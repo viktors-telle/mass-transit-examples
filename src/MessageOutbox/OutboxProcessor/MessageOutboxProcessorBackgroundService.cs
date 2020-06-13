@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MessageOutbox.Outbox;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -10,20 +9,20 @@ namespace MessageOutbox.OutboxProcessor
 {
     internal class MessageOutboxProcessorBackgroundService : BackgroundService
     {
-        private readonly IServiceProvider services;
+        private readonly IMessageOutboxProcessor messageOutboxProcessor;
         private readonly ILogger<MessageOutboxProcessorBackgroundService> logger;
 
-        public MessageOutboxProcessorBackgroundService(IServiceProvider services, ILogger<MessageOutboxProcessorBackgroundService> logger)
+        public MessageOutboxProcessorBackgroundService(
+            IMessageOutboxProcessor messageOutboxProcessor,
+            ILogger<MessageOutboxProcessorBackgroundService> logger
+            )
         {
-            this.services = services;
+            this.messageOutboxProcessor = messageOutboxProcessor;
             this.logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using var scope = services.CreateScope();
-            var messageOutboxProcessor = scope.ServiceProvider.GetRequiredService<IMessageOutboxProcessor>();
-            
             while (!stoppingToken.IsCancellationRequested)
             {
                 logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);

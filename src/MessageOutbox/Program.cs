@@ -22,8 +22,8 @@ namespace MessageOutbox
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.Configure<MessageOutboxSettings>(hostContext.Configuration.GetSection("MessageOutboxSettings"));
-                    services.AddScoped<IMessageOutboxProcessor, MessageOutboxProcessor>();
                     
+                    services.AddSingleton<IMessageOutboxProcessor, MessageOutboxProcessor>();                    
                     services.AddSingleton<IMessageOutboxRepository, MessageOutboxRepository>();
                     services.AddSingleton<MessageOutboxSettings>();
 
