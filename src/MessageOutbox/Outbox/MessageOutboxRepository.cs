@@ -33,6 +33,7 @@ namespace MessageOutbox.Outbox
             var database = client.GetDatabase(settings.DatabaseName);
 
             messages = CreateCollectionIfNotExists(database, settings.CollectionName);
+            CreateIndex();
         }
 
         public async Task<IList<IMessage>> GetUnprocessed()
@@ -97,6 +98,13 @@ namespace MessageOutbox.Outbox
             }
 
             return database.GetCollection<MessageOutboxEntity>(collectionName);
+        }
+
+        private void CreateIndex()
+        {
+            var indexKeys = Builders<MessageOutboxEntity>.IndexKeys.Ascending(message => message.IsProcessed);
+            var indexModel = new CreateIndexModel<MessageOutboxEntity>(indexKeys);
+            messages.Indexes.CreateOne(indexModel);
         }
     }
 }
